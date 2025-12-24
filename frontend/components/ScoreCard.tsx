@@ -60,7 +60,6 @@ export default function ScoreCard({ score, loading }: ScoreCardProps) {
                     <div className="text-white/80 text-sm font-medium mt-2">
                         out of 10.0
                     </div>
-                    );
                 </div>
             </div>
         </div>
