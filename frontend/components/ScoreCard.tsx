@@ -2,17 +2,18 @@ import { Trophy, Star } from 'lucide-react';
 
 interface ScoreCardProps {
     score: number | null;
+    suggestion: string | null;
     loading?: boolean;
 }
 
-export default function ScoreCard({ score, loading }: ScoreCardProps) {
-    const getGrade = (score: number): string => {
-        if (score >= 7) return 'Excellent';
-        if (score >= 6) return 'Great';
-        if (score >= 5) return 'Good';
-        if (score >= 4) return 'Average';
-        return 'Needs Work';
-    };
+export default function ScoreCard({ score, suggestion, loading }: ScoreCardProps) {
+    // const getGrade = (score: number): string => {
+    //     if (score >= 7) return 'Excellent';
+    //     if (score >= 6) return 'Great';
+    //     if (score >= 5) return 'Good';
+    //     if (score >= 4) return 'Average';
+    //     return 'Needs Work';
+    // };
 
     const getColor = (score: number): string => {
         if (score >= 7) return 'from-green-400 to-emerald-600';
@@ -55,7 +56,7 @@ export default function ScoreCard({ score, loading }: ScoreCardProps) {
                         {score.toFixed(1)}
                     </div>
                     <div className="inline-block bg-white/20 backdrop-blur-md rounded-full px-6 py-2 text-white text-2xl font-bold mb-2 border border-white/30">
-                        {getGrade(score)}
+                        {suggestion}
                     </div>
                     <div className="text-white/80 text-sm font-medium mt-2">
                         out of 10.0

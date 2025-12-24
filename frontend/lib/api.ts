@@ -7,7 +7,7 @@ export interface RatedImage {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export async function rateImage(file: File): Promise<{ score: number }> {
+export async function rateImage(file: File): Promise<{ score: number, suggestion: string }> {
     const formData = new FormData();
     formData.append('file', file);
 
@@ -26,17 +26,26 @@ export async function rateImage(file: File): Promise<{ score: number }> {
 function fileToBase64Thumbnail(file: File) {
     const img = new Image();
     const url = URL.createObjectURL(file);
+    const dpr = window.devicePixelRatio || 1;
 
     return new Promise((resolve) => {
         img.onload = () => {
-            const canvas = document.createElement("canvas");
             const scale = Math.min(300 / img.width, 300 / img.height, 1);
 
-            canvas.width = img.width * scale;
-            canvas.height = img.height * scale;
+            const targetWidth = Math.round(img.width * scale);
+            const targetHeight = Math.round(img.height * scale);
+
+            const canvas = document.createElement("canvas");
+            canvas.width = targetWidth * dpr;
+            canvas.height = targetHeight * dpr;
 
             const ctx = canvas.getContext("2d")!;
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = "high";
+
+            ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
 
             URL.revokeObjectURL(url);
             resolve(canvas.toDataURL("image/jpeg"));

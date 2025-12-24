@@ -11,6 +11,7 @@ export default function Home() {
     const [score, setScore] = useState<number | null>(null);
     const [loading, setLoading] = useState(false);
     const [history, setHistory] = useState<RatedImage[]>([]);
+    const [suggestion, setSuggestion] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -32,13 +33,18 @@ export default function Home() {
 
         const previewUrl = URL.createObjectURL(file);
         setSelectedImage(previewUrl);
+
         setScore(null);
+        setSuggestion(null);
 
         // Rate the image
         setLoading(true);
         try {
             const result = await rateImage(file);
             setScore(result.score);
+            setSuggestion(result.suggestion);
+
+            console.log(result.score, result.suggestion);
 
             await saveRating(file, result.score);
             setHistory(getRatingHistory());
@@ -55,42 +61,7 @@ export default function Home() {
     };
 
     const handleDownload = () => {
-        if (!selectedImage || score === null) return;
-
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const img = new window.Image();
-
-        img.onload = () => {
-            canvas.width = img.width;
-            canvas.height = img.height;
-
-            if (ctx) {
-                // Draw image
-                ctx.drawImage(img, 0, 0);
-
-                // Draw score overlay
-                const fontSize = Math.min(img.width, img.height) * 0.1;
-                ctx.font = `bold ${fontSize}px Arial`;
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                ctx.fillRect(10, 10, fontSize * 4, fontSize * 1.5);
-                ctx.fillStyle = 'white';
-                ctx.fillText(`Score: ${score.toFixed(1)}`, 20, 20 + fontSize);
-
-                // Download
-                canvas.toBlob((blob) => {
-                    if (blob) {
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = `aesthetic-score-${score.toFixed(1)}.png`;
-                        a.click();
-                        URL.revokeObjectURL(url);
-                    }
-                });
-            }
-        };
-        img.src = selectedImage;
+        return;
     };
 
     const handleShare = async () => {
@@ -206,7 +177,7 @@ export default function Home() {
 
                     {/* Score Section */}
                     <div className="flex items-center justify-center">
-                        <ScoreCard score={score} loading={loading} />
+                        <ScoreCard score={score} suggestion={suggestion} loading={loading} />
                     </div>
                 </div>
 

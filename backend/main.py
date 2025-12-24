@@ -1,9 +1,9 @@
+import random
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 import io
 from aesthetic_predictor import AestheticPredictor
-# from llm_suggestion import SuggestionLLM
 
 app = FastAPI(title="LAION Aesthetic Score API")
 
@@ -22,8 +22,6 @@ predictor = AestheticPredictor(
     device="cpu"
 )
 
-# suggestions_llm = SuggestionLLM()
-
 @app.post("/rate")
 async def rate_image(file: UploadFile = File(...)):
     # Basic validation
@@ -39,9 +37,22 @@ async def rate_image(file: UploadFile = File(...)):
         score = predictor.predict(image)
         predictor.saliency_map(image)
 
+        if score > 5.5:
+            score *= 1.1  # Slight boost for high scores
+            suggestions = [
+                "Great composition!", "Vibrant colors!", "Well focused!",
+                "Excellent lighting!", "Strong subject!", "Good use of depth!"
+
+            ]
+        else:
+            suggestions = [
+                "Needs work", "Improve lighting.", "Enhance composition.", "Increase sharpness.",
+                "Adjust color balance.", "Consider cropping."
+            ]
+
         return {
             "score": round(score, 2),
-            # "suggestions": suggestions
+            "suggestion": suggestions[random.randint(0, len(suggestions)-1)]
         }
 
     except Exception as e:
