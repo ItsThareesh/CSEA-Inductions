@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Upload, Download, Share2, ImageIcon } from 'lucide-react';
+import { Download, Share2, ImageIcon, UploadCloud } from 'lucide-react';
 import ScoreCard from '@/components/ScoreCard';
 import History from '@/components/History';
 import { rateImage, saveRating, getRatingHistory, type RatedImage } from '@/lib/api';
@@ -29,8 +29,9 @@ export default function Home() {
         }
 
         setError(null);
-        const imageUrl = URL.createObjectURL(file);
-        setSelectedImage(imageUrl);
+
+        const previewUrl = URL.createObjectURL(file);
+        setSelectedImage(previewUrl);
         setScore(null);
 
         // Rate the image
@@ -38,7 +39,8 @@ export default function Home() {
         try {
             const result = await rateImage(file);
             setScore(result.score);
-            saveRating(imageUrl, result.score);
+
+            await saveRating(file, result.score);
             setHistory(getRatingHistory());
         } catch (err) {
             setError('Failed to rate image. Make sure the API server is running.');
@@ -116,16 +118,16 @@ export default function Home() {
     };
 
     return (
-        <main className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-purple-900 dark:to-blue-900 py-12 px-4">
+        <main className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 py-12 px-4">
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
                 <div className="text-center mb-12">
                     <h1 className="text-5xl md:text-6xl font-bold leading-snug text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600 mb-4">
                         Aesthetic Image Rater
                     </h1>
-                    <p className="text-xl text-gray-600 dark:text-gray-300">
+                    {/* <p className="text-xl text-gray-600 dark:text-gray-300">
                         Powered by LAION Aesthetic Predictor
-                    </p>
+                    </p> */}
                 </div>
 
                 {/* Main Content Area */}
@@ -138,15 +140,16 @@ export default function Home() {
                             style={{ minHeight: '400px' }}
                         >
                             {selectedImage ? (
-                                <div className="relative w-full h-full">
+                                <div className="relative w-full max-w-none aspect-[4/3] overflow-hidden group flex-shrink-0">
                                     <img
                                         src={selectedImage}
                                         alt="Selected"
-                                        className="w-full h-full object-contain"
+                                        className="absolute inset-0 w-full h-full object-cover max-w-none"
                                     />
+
                                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center">
                                         <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center text-center">
-                                            <Upload className="w-16 h-16 text-white" />
+                                            <UploadCloud className="w-16 h-16 text-white" />
                                             <p className="text-white text-lg font-semibold mt-2">
                                                 Change Image
                                             </p>

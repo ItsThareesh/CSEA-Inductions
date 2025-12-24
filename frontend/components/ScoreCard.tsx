@@ -25,7 +25,7 @@ export default function ScoreCard({ score, loading }: ScoreCardProps) {
     if (loading) {
         return (
             <div className="w-full max-w-md mx-auto">
-                <div className="glass rounded-3xl shadow-2xl p-12 text-center animate-pulse-soft">
+                <div className="rounded-3xl shadow-2xl p-12 text-center animate-pulse-soft">
                     <div className="animate-spin rounded-full h-24 w-24 border-b-4 border-blue-500 mx-auto"></div>
                     <p className="mt-6 text-gray-600 dark:text-gray-300 text-lg font-medium">Analyzing your masterpiece...</p>
                 </div>
@@ -36,7 +36,7 @@ export default function ScoreCard({ score, loading }: ScoreCardProps) {
     if (score === null) {
         return (
             <div className="w-full max-w-md mx-auto">
-                <div className="glass rounded-3xl shadow-xl p-12 text-center border-4 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 transition-colors duration-300">
+                <div className="rounded-3xl shadow-xl p-12 text-center border-4 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 transition-colors duration-300">
                     <Star className="w-24 h-24 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
                     <p className="text-gray-600 dark:text-gray-400 text-xl font-medium">Upload an image to reveal its score</p>
                 </div>

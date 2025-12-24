@@ -5,7 +5,7 @@ export interface RatedImage {
     timestamp: number;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export async function rateImage(file: File): Promise<{ score: number }> {
     const formData = new FormData();
@@ -23,11 +23,29 @@ export async function rateImage(file: File): Promise<{ score: number }> {
     return response.json();
 }
 
-export function saveRating(imageUrl: string, score: number): void {
+function fileToBase64(file: File) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+export async function saveRating(file: File, score: number) {
+    const base64 = await fileToBase64(file);
     const history = getRatingHistory();
+
+    // Avoid duplicates
+    for (let item of history) {
+        if (item.imageUrl === base64) {
+            return;
+        }
+    }
+
     const newRating: RatedImage = {
         id: Date.now().toString(),
-        imageUrl,
+        imageUrl: base64 as string,
         score,
         timestamp: Date.now(),
     };
@@ -40,6 +58,8 @@ export function getRatingHistory(): RatedImage[] {
     if (typeof window === 'undefined') return [];
 
     const stored = localStorage.getItem('ratingHistory');
+
+    console.log(stored);
 
     return stored ? JSON.parse(stored) : [];
 }
