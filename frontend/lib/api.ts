@@ -23,6 +23,59 @@ export async function rateImage(file: File): Promise<{ score: number, suggestion
     return response.json();
 }
 
+export async function downloadScoredImage(file: File, score: number) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('score', `${score}`);
+
+    const response = await fetch(`${API_URL}/download`, {
+        method: 'POST',
+        body: formData,
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to download scored image");
+    }
+
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "image_with_score.png";
+    document.body.appendChild(a);
+    a.click();
+
+    a.remove();
+    URL.revokeObjectURL(url);
+}
+
+export async function downloadSaliencyMap(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${API_URL}/saliency-map`, {
+        method: 'POST',
+        body: formData,
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to download saliency map");
+    }
+
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "saliency_map.png";
+    document.body.appendChild(a);
+    a.click();
+
+    a.remove();
+    URL.revokeObjectURL(url);
+}
+
 function fileToBase64Thumbnail(file: File) {
     const img = new Image();
     const url = URL.createObjectURL(file);

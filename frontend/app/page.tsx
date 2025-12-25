@@ -1,19 +1,23 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Download, Share2, ImageIcon, UploadCloud } from 'lucide-react';
+import { Download, ImageIcon, UploadCloud } from 'lucide-react';
 import ScoreCard from '@/components/ScoreCard';
 import History from '@/components/History';
-import { rateImage, saveRating, getRatingHistory, type RatedImage } from '@/lib/api';
+import { rateImage, saveRating, getRatingHistory, type RatedImage, downloadScoredImage, downloadSaliencyMap } from '@/lib/api';
 
 export default function Home() {
-    const [selectedImage, setSelectedImage] = useState<string | null>(null);
-    const [score, setScore] = useState<number | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [history, setHistory] = useState<RatedImage[]>([]);
-    const [suggestion, setSuggestion] = useState<string | null>(null);
-    const [error, setError] = useState<string | null>(null);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null); // for download functions
+    const [selectedImage, setSelectedImage] = useState<string | null>(null); // for preview
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const [score, setScore] = useState<number | null>(null); // aesthetic score
+    const [suggestion, setSuggestion] = useState<string | null>(null); // suggestion text
+
+    const [history, setHistory] = useState<RatedImage[]>([]); // rating history
+
+    const [loading, setLoading] = useState(false); // loading state
+    const [error, setError] = useState<string | null>(null); // error message
 
     useEffect(() => {
         setHistory(getRatingHistory());
@@ -31,6 +35,8 @@ export default function Home() {
 
         setError(null);
 
+        setSelectedFile(file);
+
         const previewUrl = URL.createObjectURL(file);
         setSelectedImage(previewUrl);
 
@@ -44,8 +50,6 @@ export default function Home() {
             setScore(result.score);
             setSuggestion(result.suggestion);
 
-            console.log(result.score, result.suggestion);
-
             await saveRating(file, result.score);
             setHistory(getRatingHistory());
         } catch (err) {
@@ -58,34 +62,6 @@ export default function Home() {
 
     const handleUploadClick = () => {
         fileInputRef.current?.click();
-    };
-
-    const handleDownload = () => {
-        return;
-    };
-
-    const handleShare = async () => {
-        if (score === null) return;
-
-        const shareData = {
-            title: 'Aesthetic Score',
-            text: `My image scored ${score.toFixed(1)}/10 on the aesthetic scale!`,
-            url: window.location.href,
-        };
-
-        try {
-            if (navigator.share) {
-                await navigator.share(shareData);
-            } else {
-                // Fallback: copy to clipboard
-                await navigator.clipboard.writeText(
-                    `My image scored ${score.toFixed(1)}/10 on the aesthetic scale! Try it yourself at ${window.location.href}`
-                );
-                alert('Share text copied to clipboard!');
-            }
-        } catch (err) {
-            console.error('Error sharing:', err);
-        }
     };
 
     return (
@@ -149,21 +125,22 @@ export default function Home() {
                         />
 
                         {/* Action Buttons */}
-                        {score !== null && (
+                        {score !== null && selectedFile && (
                             <div className="flex gap-4">
                                 <button
-                                    onClick={handleDownload}
-                                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2"
+                                    onClick={() => downloadScoredImage(selectedFile, score)}
+                                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2"
                                 >
                                     <Download className="w-5 h-5" />
-                                    Download
+                                    Download Score
                                 </button>
+
                                 <button
-                                    onClick={handleShare}
-                                    className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2"
+                                    onClick={() => downloadSaliencyMap(selectedFile)}
+                                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2"
                                 >
-                                    <Share2 className="w-5 h-5" />
-                                    Share
+                                    <Download className="w-5 h-5" />
+                                    Download Attention Map
                                 </button>
                             </div>
                         )}

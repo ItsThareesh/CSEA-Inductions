@@ -35,10 +35,7 @@ class AestheticPredictor(torch.nn.Module):
         self.aesthetic_head.to(self.device)
 
     @torch.no_grad()
-    def predict(
-        self,
-        image: Union[str, Image.Image],
-    ) -> float:
+    def predict(self, image: Union[str, Image.Image]) -> float:
         """
         Predict aesthetic score for an image.
 
@@ -73,7 +70,18 @@ class AestheticPredictor(torch.nn.Module):
 
         return float(raw_score)
 
-    def saliency_map(self, image, n_samples=24, noise_std=0.1):
+    def saliency_map(self, image, n_samples=24, noise_std=0.1) -> Image.Image:
+        """
+        Generate saliency map for the given image.
+        
+        Args:
+            image: Path to image or PIL Image
+            n_samples: Number of noisy samples for gradient estimation
+            noise_std: Standard deviation of noise added to image
+        
+        Returns:
+            Saliency heatmap (Image.Image)
+        """
         if isinstance(image, str):
             image = Image.open(image).convert("RGB")
 
@@ -113,9 +121,5 @@ class AestheticPredictor(torch.nn.Module):
 
         # Convert back to RGB for PIL
         saliency_image = Image.fromarray(cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB))
-
-        # Ensure directory exists
-        os.makedirs("saliency", exist_ok=True)
-        saliency_image.save("saliency/saliency_map.png")
 
         return saliency_image
