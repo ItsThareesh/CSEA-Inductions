@@ -5,4 +5,3 @@ pillow
 numpy
 opencv-python
 torch
-git+https://github.com/openai/CLIP.git

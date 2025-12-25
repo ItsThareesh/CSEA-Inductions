@@ -11,7 +11,8 @@ from utils.suggestions_generation import generate_suggestions
 
 app = FastAPI(title="LAION Aesthetic Score API")
 
-# Enable CORS for the Next.js frontend
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -35,6 +36,13 @@ async def rate_image(file: UploadFile = File(...)):
     try:
         # Read image
         image_bytes = await file.read()
+
+        if len(image_bytes) > MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail="Image too large (max 8MB)"
+            )
+
         image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
 
         # Predict score

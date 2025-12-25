@@ -37,6 +37,11 @@ export default function Home() {
             return;
         }
 
+        if (!file.size || file.size > 5 * 1024 * 1024) { // 5MB limit
+            setError('Please select an image smaller than 5MB');
+            return;
+        }
+
         setError(null);
 
         setSelectedFile(file);
