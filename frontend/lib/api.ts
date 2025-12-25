@@ -26,9 +26,8 @@ export async function rateImage(file: File): Promise<{ score: number, suggestion
 export async function downloadScoredImage(file: File, score: number) {
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('score', `${score}`);
 
-    const response = await fetch(`${API_URL}/download`, {
+    const response = await fetch(`${API_URL}/download?score=${score}`, {
         method: 'POST',
         body: formData,
     });
