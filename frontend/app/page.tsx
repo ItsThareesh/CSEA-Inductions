@@ -5,6 +5,10 @@ import { Download, ImageIcon, UploadCloud } from 'lucide-react';
 import ScoreCard from '@/components/ScoreCard';
 import History from '@/components/History';
 import { rateImage, saveRating, getRatingHistory, type RatedImage, downloadScoredImage, downloadSaliencyMap } from '@/lib/api';
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { cn } from "@/lib/utils"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 export default function Home() {
     const [selectedFile, setSelectedFile] = useState<File | null>(null); // for download functions
@@ -65,11 +69,12 @@ export default function Home() {
     };
 
     return (
-        <main className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 py-12 px-4">
+        <main className="min-h-screen bg-background py-12 px-4 relative">
+            <ThemeToggle />
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
                 <div className="text-center mb-12">
-                    <h1 className="text-5xl md:text-6xl font-bold leading-snug text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600 mb-4">
+                    <h1 className="text-5xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-500 to-cyan-400 mb-4 pb-2">
                         Aesthetic Image Rater
                     </h1>
                     {/* <p className="text-xl text-gray-600 dark:text-gray-300">
@@ -81,40 +86,42 @@ export default function Home() {
                 <div className="grid md:grid-cols-2 gap-8 mb-12">
                     {/* Upload Section */}
                     <div className="space-y-6">
-                        <div
+                        <Card
                             onClick={handleUploadClick}
-                            className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden cursor-pointer hover:shadow-2xl transition-shadow duration-300 group"
-                            style={{ minHeight: '400px' }}
+                            className={cn(
+                                "relative overflow-hidden cursor-pointer hover:shadow-2xl transition-all duration-300 group border-2 border-dashed border-muted-foreground/25 hover:border-primary/50",
+                                selectedImage ? "border-none" : ""
+                            )}
                         >
-                            {selectedImage ? (
-                                <div className="relative w-full max-w-none aspect-[4/3] overflow-hidden group flex-shrink-0">
-                                    <img
-                                        src={selectedImage}
-                                        alt="Selected"
-                                        className="absolute inset-0 w-full h-full object-cover max-w-none"
-                                    />
-
-                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center">
-                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center text-center">
-                                            <UploadCloud className="w-16 h-16 text-white" />
-                                            <p className="text-white text-lg font-semibold mt-2">
-                                                Change Image
-                                            </p>
+                            <CardContent className="p-0 min-h-[400px] flex items-center justify-center">
+                                {selectedImage ? (
+                                    <div className="relative w-full h-full aspect-[4/3]">
+                                        <img
+                                            src={selectedImage}
+                                            alt="Selected"
+                                            className="w-full h-full object-cover"
+                                        />
+                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center">
+                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center text-center">
+                                                <UploadCloud className="w-16 h-16 text-white" />
+                                                <p className="text-white text-lg font-semibold mt-2">
+                                                    Change Image
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            ) : (
-                                <div className="flex flex-col items-center justify-center h-full min-h-[400px] p-12">
-                                    <ImageIcon className="w-24 h-24 text-gray-300 dark:text-gray-600 mb-6" />
-                                    <p className="text-2xl font-semibold text-gray-600 dark:text-gray-300 mb-2">
-                                        Click to Upload
-                                    </p>
-                                    <p className="text-gray-400 dark:text-gray-500">
-                                        or drag and drop your image here
-                                    </p>
-                                </div>
-                            )}
-                        </div>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center p-12 text-center">
+                                        <div className="bg-muted rounded-full p-6 mb-6">
+                                            <ImageIcon className="w-12 h-12 text-muted-foreground" />
+                                        </div>
+                                        <p className="text-2xl font-semibold text-foreground mb-2">
+                                            Click to Upload
+                                        </p>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
 
                         <input
                             ref={fileInputRef}
@@ -127,26 +134,27 @@ export default function Home() {
                         {/* Action Buttons */}
                         {score !== null && selectedFile && (
                             <div className="flex gap-4">
-                                <button
+                                <Button
                                     onClick={() => downloadScoredImage(selectedFile, score)}
-                                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2"
+                                    className="flex-1 h-14 text-lg shadow-lg hover:shadow-xl transition-all"
                                 >
-                                    <Download className="w-5 h-5" />
+                                    <Download className="w-5 h-5 mr-2" />
                                     Download Score
-                                </button>
+                                </Button>
 
-                                <button
+                                <Button
                                     onClick={() => downloadSaliencyMap(selectedFile)}
-                                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2"
+                                    variant="secondary"
+                                    className="flex-1 h-14 text-lg shadow-lg hover:shadow-xl transition-all"
                                 >
-                                    <Download className="w-5 h-5" />
+                                    <Download className="w-5 h-5 mr-2" />
                                     Download Attention Map
-                                </button>
+                                </Button>
                             </div>
                         )}
 
                         {error && (
-                            <div className="bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-200 px-4 py-3 rounded-xl">
+                            <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-xl">
                                 {error}
                             </div>
                         )}
@@ -162,7 +170,7 @@ export default function Home() {
                 <History history={history} />
 
                 {/* Footer */}
-                <div className="mt-16 text-center text-gray-500 dark:text-gray-400">
+                <div className="mt-16 text-center text-muted-foreground">
                     <p className="text-sm">
                         This tool uses the LAION Aesthetic Predictor to evaluate image quality.
                     </p>
