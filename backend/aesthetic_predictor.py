@@ -21,7 +21,7 @@ class AestheticPredictor(torch.nn.Module):
 
         # Load CLIP
         self.clip_model, self.preprocess = clip.load(
-            "ViT-B/32", device=self.device
+            "ViT-B/16", device=self.device
         )
         self.clip_model.eval()
 

@@ -23,7 +23,7 @@ app.add_middleware(
 
 # Load predictor
 predictor = AestheticPredictor(
-    aesthetic_weights_path="aesthetic_linear_head_weight.pth",
+    aesthetic_weights_path="linear_head_weight-b-16.pth",
     device="cpu"
 )
 
