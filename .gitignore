@@ -4,3 +4,4 @@ images/
 .DS_Store
 llm_suggestion.py
 MEME-Task/
+backend/cache/

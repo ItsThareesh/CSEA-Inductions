@@ -1,10 +1,10 @@
+import io
+import numpy as np
 from typing import Optional
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
-import io
-import numpy as np
 from aesthetic_predictor import AestheticPredictor
 from utils.draw_image import draw_score_on_image
 from utils.suggestions_generation import generate_suggestions

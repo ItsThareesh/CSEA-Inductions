@@ -15,7 +15,7 @@ def score_bucket(score: float) -> str:
             "Minor adjustments could elevate the image."
         ],
         "average": [
-            "The image lacks a strong focal point.",
+            "Composition could be somewhat cluttered.",
             "Lighting could be improved for clarity.",
             "Simplifying the scene may help."
         ],
@@ -35,50 +35,87 @@ def score_bucket(score: float) -> str:
     
     return SUGGESTIONS["poor"]
 
-def extract_heuristics(image_bgr: np.ndarray) -> dict:
-    gray = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2GRAY)
+def color_heuristics(image_bgr: np.ndarray) -> dict:
     hsv = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2HSV)
+    
+    sat = hsv[..., 1] / 255.0 # just saturation channel normalized
 
-    brightness = gray.mean() / 255.0
-    sharpness = cv2.Laplacian(gray, cv2.CV_64F).var()
-    saturation = hsv[..., 1].mean()
+    p25 = np.percentile(sat, 25)
+    p75 = np.percentile(sat, 75)
+    mean = sat.mean()
+    std = sat.std()
 
     return {
-        "brightness": brightness,
-        "sharpness": sharpness,
-        "saturation": saturation,
+        "low_color": p75 < 0.35,
+        "high_color": p25 > 0.45,
+        "washed_out": mean < 0.35 and std < 0.10,
+        "oversaturated": mean > 0.60 and std < 0.12,
     }
 
+def brightness_heuristic(image_bgr: np.ndarray) -> dict:
+    gray = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2GRAY)
+    brightness = gray / 255.0
 
-def interpret_heuristics(h: dict) -> dict:
+    p10 = np.percentile(gray, 10)
+    p25 = np.percentile(gray, 25)
+    p75 = np.percentile(gray, 75)
+    p90 = np.percentile(gray, 90)
+
+    mean = gray.mean()
+    std = gray.std()
+
     return {
-        "underexposed": h["brightness"] < 0.35,
-        "overexposed": h["brightness"] > 0.75,
-        "blurry": h["sharpness"] < 100,
-        "very_sharp": h["sharpness"] > 300,
-        "low_color": h["saturation"] < 0.25,
-        "high_color": h["saturation"] > 0.7,
+        # Overall exposure
+        "underexposed": p75 < 0.35,
+        "overexposed": p25 > 0.70,
+
+        # Detail loss
+        "shadow_crush": p10 < 0.05 and std < 0.15,
+        "highlight_clipping": p90 > 0.95 and std < 0.15,
+
+        # Flat lighting
+        "low_contrast": std < 0.12,
+    }
+
+def interpret_heuristics(image_bgr: np.ndarray) -> dict:
+    gray = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2GRAY)
+    sharpness = cv2.Laplacian(gray, cv2.CV_64F).var()
+    
+    brightness_flags = brightness_heuristic(image_bgr)
+    saturation_flags = color_heuristics(image_bgr)
+    
+    return {
+        **brightness_flags,
+        **saturation_flags,
+        "blurry": sharpness < 100,
+        "very_sharp": sharpness > 300
     }
     
 def heuristic_suggestions(flags: dict) -> list[str]:
+    suggestion = {
+        "underexposed": "The image appears underexposed. Try brighter lighting.",
+        "overexposed": "Highlights are blown out. Reducing exposure may help.",
+        "shadow_crush": "Details are lost in shadows. Increase fill light or exposure.",
+        "highlight_clipping": "Details are lost in highlights. Lower exposure or use HDR.",
+        "low_contrast": "The image looks flat. Increasing contrast can add depth.",
+        "blurry": "The image looks slightly blurry. Improve focus or stability.",
+        "low_color": "Colors appear muted. Increasing saturation could help.",
+        "high_color": "Strong colors add impact, but be careful of oversaturation.",
+        "washed_out": "Colors appear washed out. Increasing contrast or saturation may help.",
+        "oversaturated": "Colors feel overly intense. Slight desaturation could improve balance.",
+        "very_sharp": "The image is very sharp, which enhances detail and clarity.",
+    }
+
     s = []
 
-    if flags["underexposed"]:
-        s.append("The image appears underexposed. Try brighter lighting.")
-    if flags["overexposed"]:
-        s.append("Highlights are blown out. Reducing exposure may help.")
-    if flags["blurry"]:
-        s.append("The image looks slightly blurry. Improve focus or stability.")
-    if flags["low_color"]:
-        s.append("Colors appear muted. Increasing saturation could help.")
-    if flags["high_color"]:
-        s.append("Strong colors add impact, but be careful of oversaturation.")
+    for flag, active in flags.items():
+        if active and flag in suggestion:
+            s.append(suggestion[flag])
 
     return s
 
 def generate_suggestions(score: float, image_bgr: np.ndarray) -> list[str]:
-    heuristics = extract_heuristics(image_bgr)
-    flags = interpret_heuristics(heuristics)
+    flags = interpret_heuristics(image_bgr)
 
     heuristic_msgs = heuristic_suggestions(flags)
     bucket_msgs = score_bucket(score)
