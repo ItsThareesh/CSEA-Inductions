@@ -67,8 +67,8 @@ export default function Home() {
             return;
         }
 
-        if (file.size > 5 * 1024 * 1024) {
-            setError('Please select an image smaller than 5MB');
+        if (file.size > 3 * 1024 * 1024) {
+            setError('Please select an image smaller than 3MB');
             return;
         }
 

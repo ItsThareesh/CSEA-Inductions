@@ -64,7 +64,7 @@ def brightness_heuristic(image_bgr: np.ndarray) -> dict:
     return {
         # Overall exposure
         "underexposed": p75 < 0.35,
-        "overexposed": p25 > 0.70,
+        "overexposed": p25 > 0.75,
 
         # Detail loss
         "shadow_crush": p10 < 0.05 and std < 0.15,

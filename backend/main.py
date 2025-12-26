@@ -33,20 +33,23 @@ async def rate_image(file: UploadFile = File(...)):
     # Basic validation
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File must be an image")
+    
+    # Read image
+    image_bytes = await file.read()
+
+    if (len(image_bytes) > 3 * 1024 * 1024):
+        raise HTTPException(status_code=400, detail="Image size exceeds 3MB limit")
 
     try:
-        # Read image
-        image_bytes = await file.read()
         image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    except:
+        raise HTTPException(status_code=400, detail="Invalid image file")
 
-        # Predict score
-        score = predictor.predict(image)
-        suggestions = generate_suggestions(score, np.array(image))
+    # Predict score
+    score = predictor.predict(image)
+    suggestions = generate_suggestions(score, np.array(image))
 
-        return {
-            "score": round(score, 2),
-            "suggestions": suggestions,
-        }
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return {
+        "score": round(score, 2),
+        "suggestions": suggestions,
+    }
