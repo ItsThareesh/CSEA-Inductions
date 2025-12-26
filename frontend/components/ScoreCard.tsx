@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils"
 
 interface ScoreCardProps {
     score: number | null;
-    suggestion: string | null;
+    suggestion: string[] | null;
     loading?: boolean;
 }
 

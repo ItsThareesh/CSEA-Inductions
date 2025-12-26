@@ -46,15 +46,12 @@ def color_heuristics(image_bgr: np.ndarray) -> dict:
     std = sat.std()
 
     return {
-        "low_color": p75 < 0.35,
-        "high_color": p25 > 0.45,
         "washed_out": mean < 0.35 and std < 0.10,
         "oversaturated": mean > 0.60 and std < 0.12,
     }
 
 def brightness_heuristic(image_bgr: np.ndarray) -> dict:
     gray = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2GRAY)
-    brightness = gray / 255.0
 
     p10 = np.percentile(gray, 10)
     p25 = np.percentile(gray, 25)
@@ -99,8 +96,6 @@ def heuristic_suggestions(flags: dict) -> list[str]:
         "highlight_clipping": "Details are lost in highlights. Lower exposure or use HDR.",
         "low_contrast": "The image looks flat. Increasing contrast can add depth.",
         "blurry": "The image looks slightly blurry. Improve focus or stability.",
-        "low_color": "Colors appear muted. Increasing saturation could help.",
-        "high_color": "Strong colors add impact, but be careful of oversaturation.",
         "washed_out": "Colors appear washed out. Increasing contrast or saturation may help.",
         "oversaturated": "Colors feel overly intense. Slight desaturation could improve balance.",
         "very_sharp": "The image is very sharp, which enhances detail and clarity.",

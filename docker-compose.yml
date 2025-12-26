@@ -1,0 +1,18 @@
+services:
+  backend:
+    build: ./backend
+    container_name: csea-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ~/.cache/clip:/root/.cache/clip
+
+  frontend:
+    build: ./frontend
+    container_name: csea-frontend
+    environment:
+      INTERNAL_BACKEND_URL: "http://backend:8000"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
