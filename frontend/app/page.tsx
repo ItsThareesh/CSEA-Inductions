@@ -3,15 +3,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Download, ImageIcon, UploadCloud } from 'lucide-react';
 
-import ScoreCard from '@/components/ScoreCard';
-import History from '@/components/History';
-
-import {
-    rateImage,
-    downloadScoredImage,
-    downloadSaliencyMap,
-    type RatedImage,
-} from '@/lib/api';
+import { RatedImage, rateImage } from '@/lib/api';
+import { downloadSaliencyMap, downloadScoredImage } from '@/lib/api';
 
 import {
     fileToBase64Thumbnail,
@@ -22,7 +15,10 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import ScoreCard from '@/components/ScoreCard';
+import History from '@/components/History';
 import { cn } from "@/lib/utils";
+
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function Home() {
@@ -35,8 +31,11 @@ export default function Home() {
     const [suggestion, setSuggestion] = useState<string[] | null>(null);
 
     const [history, setHistory] = useState<RatedImage[]>([]);
-    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const [ratingLoading, setRatingLoading] = useState(false);
+    const [downloadLoading, setDownloadLoading] = useState(false);
+    const [saliencyLoading, setSaliencyLoading] = useState(false);
 
     // Load history on mount
     useEffect(() => {
@@ -57,7 +56,7 @@ export default function Home() {
         };
     }, [selectedImage]);
 
-    const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    async function handleFileSelect(event: React.ChangeEvent<HTMLInputElement>) {
         const file = event.target.files?.[0];
         if (!file) return;
 
@@ -73,10 +72,11 @@ export default function Home() {
         }
 
         setError(null);
-        setLoading(true);
+        setRatingLoading(true);
 
         setSelectedFile(file);
         setSelectedImage(URL.createObjectURL(file));
+
         setScore(null);
         setSuggestion(null);
 
@@ -92,8 +92,7 @@ export default function Home() {
             // Check Duplicates
             const existingHistory = await getRatingHistory();
             const exists = existingHistory.some(
-                item =>
-                    item.imageUrl === thumbnail &&
+                item => item.imageUrl === thumbnail &&
                     Math.abs(item.score - result.score) < 0.01
             );
 
@@ -106,9 +105,29 @@ export default function Home() {
             console.error(err);
             setError('Failed to rate image. Make sure the API server is running.');
         } finally {
-            setLoading(false);
+            setRatingLoading(false);
         }
+    }
+
+    async function handleDownloadClick() {
+        setDownloadLoading(true);
+
+        if (selectedFile && score !== null) {
+            await downloadScoredImage(selectedFile, score);
+        }
+
+        setDownloadLoading(false);
     };
+
+    async function handleSaliencyMapDownload() {
+        setSaliencyLoading(true);
+
+        if (selectedFile) {
+            await downloadSaliencyMap(selectedFile);
+        }
+
+        setSaliencyLoading(false);
+    }
 
     const handleUploadClick = () => {
         fileInputRef.current?.click();
@@ -180,20 +199,32 @@ export default function Home() {
                         {score !== null && selectedFile && (
                             <div className="flex gap-4">
                                 <Button
-                                    onClick={() => downloadScoredImage(selectedFile, score)}
+                                    onClick={handleDownloadClick}
                                     className="flex-1 h-14 text-lg"
                                 >
-                                    <Download className="w-5 h-5 mr-2" />
-                                    Download Score
+                                    {downloadLoading ? (
+                                        "Downloading..."
+                                    ) : (
+                                        <>
+                                            <Download className="w-5 h-5 mr-2" />
+                                            Download Score
+                                        </>
+                                    )}
                                 </Button>
 
                                 <Button
-                                    onClick={() => downloadSaliencyMap(selectedFile)}
+                                    onClick={handleSaliencyMapDownload}
                                     variant="secondary"
                                     className="flex-1 h-14 text-lg"
                                 >
-                                    <Download className="w-5 h-5 mr-2" />
-                                    Download Attention Map
+                                    {saliencyLoading ? (
+                                        "Generating..."
+                                    ) : (
+                                        <>
+                                            <Download className="w-5 h-5 mr-2" />
+                                            Download Attention Map
+                                        </>
+                                    )}
                                 </Button>
                             </div>
                         )}
@@ -210,7 +241,7 @@ export default function Home() {
                         <ScoreCard
                             score={score}
                             suggestion={suggestion}
-                            loading={loading}
+                            loading={ratingLoading}
                         />
                     </div>
                 </div>
