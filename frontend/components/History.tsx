@@ -47,7 +47,7 @@ export default function History({ history }: HistoryProps) {
                                     {item.score.toFixed(1)}
                                 </div>
                                 <div className="text-white/80 text-xs font-medium">
-                                    {new Date(item.timestamp).toLocaleDateString()}
+                                    {new Date(item.timestamp).toLocaleDateString('en-GB')}
                                 </div>
                             </div>
                         </div>
