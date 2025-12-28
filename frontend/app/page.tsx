@@ -129,9 +129,31 @@ export default function Home() {
         setSaliencyLoading(false);
     }
 
-    const handleUploadClick = () => {
+    function handleUploadClick() {
         fileInputRef.current?.click();
-    };
+    }
+
+    function handleFile(file: File) {
+        // Fake an input event so existing logic is reused
+        const fakeEvent = {
+            target: { files: [file] }
+        } as unknown as React.ChangeEvent<HTMLInputElement>;
+
+        handleFileSelect(fakeEvent);
+    }
+
+    function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
+        e.preventDefault();
+    }
+
+    function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+        e.preventDefault();
+
+        const file = e.dataTransfer.files?.[0];
+        if (!file) return;
+
+        handleFile(file);
+    }
 
     return (
         <main className="min-h-screen bg-background py-12 px-4 relative">
@@ -151,6 +173,8 @@ export default function Home() {
                     {/* Upload */}
                     <div className="space-y-6">
                         <Card
+                            onDragOver={handleDragOver}
+                            onDrop={handleDrop}
                             onClick={handleUploadClick}
                             className={cn(
                                 "relative overflow-hidden cursor-pointer transition-all group border-2 border-dashed border-muted-foreground/25 hover:border-primary/50",
@@ -182,6 +206,12 @@ export default function Home() {
                                         <p className="text-2xl font-semibold text-muted-foreground">
                                             Click to Upload
                                         </p>
+                                        <div className="mt-2 text-sm text-muted-foreground">
+                                            or drag and drop an image here
+                                        </div>
+                                        <div className="mt-4 text-sm text-muted-foreground">
+                                            (Max size: 3MB)
+                                        </div>
                                     </div>
                                 )}
                             </CardContent>
