@@ -15,7 +15,7 @@ def score_bucket(score: float) -> str:
             "Minor adjustments could elevate the image."
         ],
         "average": [
-            "Composition could be somewhat cluttered.",
+            "Composition could be stronger.",
             "Lighting could be improved for clarity.",
             "Simplifying the scene may help."
         ],
@@ -51,24 +51,23 @@ def color_heuristics(image_bgr: np.ndarray) -> dict:
     }
 
 def brightness_heuristic(image_bgr: np.ndarray) -> dict:
-    gray = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2GRAY)
+    # Normalize grayscale to [0, 1]
+    gray = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2GRAY).astype(np.float32) / 255.0
 
     p10 = np.percentile(gray, 10)
-    p25 = np.percentile(gray, 25)
     p75 = np.percentile(gray, 75)
     p90 = np.percentile(gray, 90)
 
-    mean = gray.mean()
     std = gray.std()
 
     return {
         # Overall exposure
-        "underexposed": p75 < 0.35,
-        "overexposed": p25 > 0.75,
+        "underexposed": p75 < 0.30,
+        "overexposed": p90 > 0.95 and std < 0.18,
 
         # Detail loss
         "shadow_crush": p10 < 0.05 and std < 0.15,
-        "highlight_clipping": p90 > 0.95 and std < 0.15,
+        "highlight_clipping": p90 > 0.98,
 
         # Flat lighting
         "low_contrast": std < 0.12,
@@ -88,7 +87,7 @@ def interpret_heuristics(image_bgr: np.ndarray) -> dict:
         "very_sharp": sharpness > 300
     }
     
-def heuristic_suggestions(flags: dict) -> list[str]:
+def heuristic_suggestions(flags: dict, score: float) -> list[str]:
     suggestion = {
         "underexposed": "The image appears underexposed. Try brighter lighting.",
         "overexposed": "Highlights are blown out. Reducing exposure may help.",
@@ -101,18 +100,24 @@ def heuristic_suggestions(flags: dict) -> list[str]:
         "very_sharp": "The image is very sharp, which enhances detail and clarity.",
     }
 
-    s = []
+    msgs = []
 
     for flag, active in flags.items():
-        if active and flag in suggestion:
-            s.append(suggestion[flag])
+        if not active or flag not in suggestion:
+            continue
 
-    return s
+        # Don't nitpick good photos
+        if score >= 7 and flag in {"overexposed", "underexposed", "low_contrast"}:
+            continue
+
+        msgs.append(suggestion[flag])
+
+    return msgs
 
 def generate_suggestions(score: float, image_bgr: np.ndarray) -> list[str]:
     flags = interpret_heuristics(image_bgr)
 
-    heuristic_msgs = heuristic_suggestions(flags)
+    heuristic_msgs = heuristic_suggestions(flags, score)
     bucket_msgs = score_bucket(score)
 
     final = []
